@@ -1,5 +1,5 @@
-// Replace these two values after creating your Supabase project.
+// Public Supabase connection details for the photography website.
 window.PHOTO_SITE_CONFIG = {
-  supabaseUrl: "https://YOUR-PROJECT.supabase.co",
-  supabaseAnonKey: "YOUR-SUPABASE-ANON-KEY"
+  supabaseUrl: "https://tmagekpcrnaafhpqqrfc.supabase.co",
+  supabaseAnonKey: "sb_publishable_akRSKXr8dId8mfZFYo61rQ_cISoX1Dl"
 };
