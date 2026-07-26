@@ -50,6 +50,25 @@ async function loadAlbums() {
   albumGrid.querySelectorAll('.album-card').forEach(card => card.addEventListener('click', () => openAlbum(card.dataset.id)));
 }
 
+function updatePhotoProgress(loaded, total) {
+  const progress = document.querySelector('#photo-loading-progress');
+  if (!progress) return;
+
+  const percentage = total ? Math.round((loaded / total) * 100) : 100;
+  const bar = progress.querySelector('.gallery-progress-bar');
+  const percentageText = progress.querySelector('.gallery-progress-percentage');
+  const countText = progress.querySelector('.gallery-progress-count');
+
+  bar.style.width = `${percentage}%`;
+  percentageText.textContent = `${percentage}%`;
+  countText.textContent = total ? `${loaded} of ${total} photos loaded` : 'No photos in this album';
+
+  if (loaded >= total) {
+    progress.classList.add('complete');
+    window.setTimeout(() => progress.remove(), 550);
+  }
+}
+
 async function openAlbum(id) {
   const [{ data: album }, { data: photos, error }] = await Promise.all([
     client.from('albums').select('*').eq('id', id).single(),
@@ -62,12 +81,42 @@ async function openAlbum(id) {
   document.querySelector('#dialog-date').textContent = formatDate(album.event_date);
   document.querySelector('#dialog-description').textContent = album.description || '';
   const grid = document.querySelector('#photo-grid');
-  grid.innerHTML = photos.map(photo => `<button class="photo-tile" data-full="${photo.image_url}"><img loading="lazy" src="${photo.thumbnail_url || photo.image_url}" alt="${escapeHtml(photo.caption || album.title)}"></button>`).join('');
+
+  grid.innerHTML = `
+    <div id="photo-loading-progress" class="gallery-progress" role="status" aria-live="polite">
+      <div class="gallery-progress-heading">
+        <span>Loading photos</span>
+        <strong class="gallery-progress-percentage">0%</strong>
+      </div>
+      <div class="gallery-progress-track"><div class="gallery-progress-bar"></div></div>
+      <p class="gallery-progress-count">0 of ${photos.length} photos loaded</p>
+    </div>
+    ${photos.map(photo => `<button class="photo-tile" data-full="${photo.image_url}"><img loading="lazy" src="${photo.thumbnail_url || photo.image_url}" alt="${escapeHtml(photo.caption || album.title)}"></button>`).join('')}`;
+
+  albumDialog.showModal();
+
+  const images = [...grid.querySelectorAll('.photo-tile img')];
+  let loaded = 0;
+  const markLoaded = () => {
+    loaded += 1;
+    updatePhotoProgress(loaded, images.length);
+  };
+
+  if (!images.length) updatePhotoProgress(0, 0);
+
+  images.forEach(image => {
+    if (image.complete) {
+      markLoaded();
+    } else {
+      image.addEventListener('load', markLoaded, { once: true });
+      image.addEventListener('error', markLoaded, { once: true });
+    }
+  });
+
   grid.querySelectorAll('.photo-tile').forEach(tile => tile.addEventListener('click', () => {
     document.querySelector('#lightbox-image').src = tile.dataset.full;
     lightbox.showModal();
   }));
-  albumDialog.showModal();
 }
 
 loadAlbums();
