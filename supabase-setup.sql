@@ -7,10 +7,13 @@ create table if not exists public.albums (
   slug text unique not null,
   description text,
   event_date date,
+  expires_at timestamptz,
   cover_url text,
   is_public boolean not null default true,
   created_at timestamptz not null default now()
 );
+
+alter table public.albums add column if not exists expires_at timestamptz;
 
 create table if not exists public.photos (
   id uuid primary key default gen_random_uuid(),
