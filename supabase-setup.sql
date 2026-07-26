@@ -1,0 +1,37 @@
+-- Run this entire file once in Supabase > SQL Editor.
+create extension if not exists "pgcrypto";
+
+create table if not exists public.albums (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  slug text unique not null,
+  description text,
+  event_date date,
+  cover_url text,
+  is_public boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.photos (
+  id uuid primary key default gen_random_uuid(),
+  album_id uuid not null references public.albums(id) on delete cascade,
+  storage_path text not null unique,
+  image_url text not null,
+  thumbnail_url text,
+  caption text,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now()
+);
+
+alter table public.albums enable row level security;
+alter table public.photos enable row level security;
+
+create policy "Public can view public albums" on public.albums for select using (is_public = true or auth.role() = 'authenticated');
+create policy "Public can view photos in public albums" on public.photos for select using (exists (select 1 from public.albums where albums.id = photos.album_id and (albums.is_public = true or auth.role() = 'authenticated')));
+create policy "Authenticated users manage albums" on public.albums for all to authenticated using (true) with check (true);
+create policy "Authenticated users manage photos" on public.photos for all to authenticated using (true) with check (true);
+
+insert into storage.buckets (id, name, public) values ('photos', 'photos', true) on conflict (id) do update set public = true;
+create policy "Public photo viewing" on storage.objects for select using (bucket_id = 'photos');
+create policy "Authenticated photo upload" on storage.objects for insert to authenticated with check (bucket_id = 'photos');
+create policy "Authenticated photo deletion" on storage.objects for delete to authenticated using (bucket_id = 'photos');
