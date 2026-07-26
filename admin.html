@@ -31,7 +31,10 @@
     <section id="manager-panel" class="hidden">
       <div class="admin-toolbar">
         <div><p class="eyebrow">Dashboard</p><h1>Manage albums</h1></div>
-        <button id="logout-button" class="text-button">Sign out</button>
+        <div>
+          <button id="purge-expired" class="text-button" type="button">Purge expired galleries</button>
+          <button id="logout-button" class="text-button">Sign out</button>
+        </div>
       </div>
 
       <div class="admin-layout">
@@ -39,7 +42,8 @@
           <h2>Create an album</h2>
           <form id="album-form" class="form-stack">
             <label>Album title<input id="album-title" required maxlength="100" placeholder="Ryan & Claire’s Wedding"></label>
-            <label>Date<input id="album-date" type="date"></label>
+            <label>Event date<input id="album-date" type="date"></label>
+            <label>Gallery expiry<input id="album-expiry" type="date"></label>
             <label>Description<textarea id="album-description" rows="3" maxlength="500" placeholder="A short description of the day"></textarea></label>
             <label class="checkbox"><input id="album-public" type="checkbox" checked> Publish album publicly</label>
             <button class="button button-dark" type="submit">Create album</button>
