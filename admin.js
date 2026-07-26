@@ -20,36 +20,31 @@ function setLoggedIn(loggedIn) {
   if (loggedIn) refreshAlbums();
 }
 
+const loginMessage = document.querySelector('#login-message');
+const loginForm = document.querySelector('#login-form');
+
 if (!configured) {
-  showMessage(document.querySelector('#login-message'), 'Add your Supabase URL and publishable key to config.js first.', true);
-  document.querySelectorAll('#login-panel button').forEach(button => button.disabled = true);
+  showMessage(loginMessage, 'Supabase is not configured yet.', true);
+  loginForm.querySelector('button').disabled = true;
 } else {
-  client.auth.getSession().then(({ data }) => setLoggedIn(Boolean(data.session)));
+  client.auth.getSession().then(({ data, error }) => {
+    if (error) showMessage(loginMessage, error.message, true);
+    setLoggedIn(Boolean(data?.session));
+  });
   client.auth.onAuthStateChange((_event, session) => setLoggedIn(Boolean(session)));
 }
 
-document.querySelector('#magic-link-form').addEventListener('submit', async event => {
+loginForm.addEventListener('submit', async event => {
   event.preventDefault();
-  const message = document.querySelector('#login-message');
-  const email = document.querySelector('#magic-email').value.trim();
-  showMessage(message, 'Sending your secure sign-in link…');
-  const redirectTo = new URL('admin.html', window.location.href).href;
-  const { error } = await client.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: redirectTo }
-  });
-  showMessage(message, error ? error.message : 'Email sent. Open the newest link on this device; it will return you to the Album Manager.', Boolean(error));
-});
-
-document.querySelector('#login-form').addEventListener('submit', async event => {
-  event.preventDefault();
-  const message = document.querySelector('#login-message');
   const email = document.querySelector('#email').value.trim();
   const password = document.querySelector('#password').value;
-  if (!email || !password) return showMessage(message, 'Enter both email and password.', true);
-  showMessage(message, 'Signing in…');
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  showMessage(message, error ? error.message : '', Boolean(error));
+  if (!email || !password) return showMessage(loginMessage, 'Enter both email and password.', true);
+  showMessage(loginMessage, 'Signing in…');
+  const { data, error } = await client.auth.signInWithPassword({ email, password });
+  if (error) return showMessage(loginMessage, error.message, true);
+  if (!data?.session) return showMessage(loginMessage, 'Sign-in did not create a session.', true);
+  showMessage(loginMessage, 'Signed in.');
+  setLoggedIn(true);
 });
 
 document.querySelector('#logout-button').addEventListener('click', () => client.auth.signOut());
@@ -73,7 +68,10 @@ document.querySelector('#album-form').addEventListener('submit', async event => 
 
 async function refreshAlbums() {
   const { data, error } = await client.from('albums').select('id,title,event_date,expires_at,is_public,cover_url,created_at,photos(count)').order('created_at', { ascending: false });
-  if (error) return console.error(error);
+  if (error) {
+    showMessage(loginMessage, `Database error: ${error.message}`, true);
+    return;
+  }
   albums = data || [];
   const select = document.querySelector('#album-select');
   select.innerHTML = '<option value="">Select an album</option>' + albums.map(album => `<option value="${album.id}">${album.title}</option>`).join('');
