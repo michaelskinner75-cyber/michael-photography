@@ -19,12 +19,19 @@
     <section id="login-panel" class="admin-card narrow">
       <p class="eyebrow">Secure access</p>
       <h1>Album Manager</h1>
-      <p>Sign in with the email account added to your Supabase project.</p>
-      <form id="login-form" class="form-stack">
-        <label>Email<input id="email" type="email" required autocomplete="email"></label>
-        <label>Password<input id="password" type="password" required autocomplete="current-password"></label>
-        <button class="button button-dark" type="submit">Sign in</button>
+      <p>Enter your administrator email and we’ll send a secure sign-in link directly back to this page.</p>
+      <form id="magic-link-form" class="form-stack">
+        <label>Email<input id="magic-email" type="email" required autocomplete="email"></label>
+        <button class="button button-dark" type="submit">Email me a sign-in link</button>
       </form>
+      <details style="margin-top:1rem">
+        <summary>Use a password instead</summary>
+        <form id="login-form" class="form-stack" style="margin-top:1rem">
+          <label>Email<input id="email" type="email" autocomplete="email"></label>
+          <label>Password<input id="password" type="password" autocomplete="current-password"></label>
+          <button class="button button-dark" type="submit">Sign in with password</button>
+        </form>
+      </details>
       <p id="login-message" class="form-message"></p>
     </section>
 
