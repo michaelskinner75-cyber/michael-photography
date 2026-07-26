@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Album Manager · Michael Skinner Photography</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <header class="site-header solid">
+    <a class="brand" href="index.html">MS <span>Photography</span></a>
+    <nav><a href="index.html">View website</a></nav>
+  </header>
+
+  <main class="admin-main">
+    <section id="login-panel" class="admin-card narrow">
+      <p class="eyebrow">Secure access</p>
+      <h1>Album Manager</h1>
+      <p>Sign in with the email account added to your Supabase project.</p>
+      <form id="login-form" class="form-stack">
+        <label>Email<input id="email" type="email" required autocomplete="email"></label>
+        <label>Password<input id="password" type="password" required autocomplete="current-password"></label>
+        <button class="button button-dark" type="submit">Sign in</button>
+      </form>
+      <p id="login-message" class="form-message"></p>
+    </section>
+
+    <section id="manager-panel" class="hidden">
+      <div class="admin-toolbar">
+        <div><p class="eyebrow">Dashboard</p><h1>Manage albums</h1></div>
+        <button id="logout-button" class="text-button">Sign out</button>
+      </div>
+
+      <div class="admin-layout">
+        <section class="admin-card">
+          <h2>Create an album</h2>
+          <form id="album-form" class="form-stack">
+            <label>Album title<input id="album-title" required maxlength="100" placeholder="Ryan & Claire’s Wedding"></label>
+            <label>Date<input id="album-date" type="date"></label>
+            <label>Description<textarea id="album-description" rows="3" maxlength="500" placeholder="A short description of the day"></textarea></label>
+            <label class="checkbox"><input id="album-public" type="checkbox" checked> Publish album publicly</label>
+            <button class="button button-dark" type="submit">Create album</button>
+          </form>
+        </section>
+
+        <section class="admin-card">
+          <h2>Bulk photo upload</h2>
+          <form id="upload-form" class="form-stack">
+            <label>Choose album<select id="album-select" required><option value="">Select an album</option></select></label>
+            <label class="drop-zone" id="drop-zone">
+              <input id="photo-files" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+              <strong>Tap to choose photos</strong>
+              <span>or drag and drop hundreds at once</span>
+              <small>JPEG, PNG or WebP · uploads run in manageable batches</small>
+            </label>
+            <div id="file-summary" class="file-summary">No photos selected</div>
+            <button class="button button-dark" type="submit">Upload selected photos</button>
+          </form>
+          <div id="upload-status" class="upload-status hidden">
+            <div class="progress-track"><div id="progress-bar" class="progress-bar"></div></div>
+            <p id="progress-text"></p>
+          </div>
+        </section>
+      </div>
+
+      <section class="admin-card album-list-card">
+        <div class="section-heading compact"><div><p class="eyebrow">Library</p><h2>Your albums</h2></div></div>
+        <div id="admin-album-list" class="admin-album-list"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
