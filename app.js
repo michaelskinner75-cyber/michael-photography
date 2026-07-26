@@ -23,7 +23,15 @@ async function loadAlbums() {
     albumGrid.innerHTML = `<article class="setup-card"><h3>Your album site is ready</h3><p>Connect Supabase using <code>config.js</code> to publish real albums and bulk-upload photos.</p></article>`;
     return;
   }
-  const { data: albums, error } = await client.from('albums').select('id,title,description,event_date,cover_url,created_at').eq('is_public', true).order('event_date', { ascending: false, nullsFirst: false });
+
+  const now = new Date().toISOString();
+  const { data: albums, error } = await client
+    .from('albums')
+    .select('id,title,description,event_date,expires_at,cover_url,created_at')
+    .eq('is_public', true)
+    .or(`expires_at.is.null,expires_at.gt.${now}`)
+    .order('event_date', { ascending: false, nullsFirst: false });
+
   if (error) {
     albumGrid.innerHTML = `<p>Albums could not be loaded.</p>`;
     console.error(error);
@@ -33,6 +41,7 @@ async function loadAlbums() {
     albumGrid.innerHTML = `<p>No public albums have been added yet.</p>`;
     return;
   }
+
   albumGrid.innerHTML = albums.map(album => `
     <button class="album-card" data-id="${album.id}">
       <div class="album-cover" style="background-image:url('${album.cover_url || ''}')"><span>${album.cover_url ? '' : 'MS'}</span></div>
@@ -47,6 +56,8 @@ async function openAlbum(id) {
     client.from('photos').select('id,image_url,thumbnail_url,caption,sort_order').eq('album_id', id).order('sort_order')
   ]);
   if (error || !album) return;
+  if (album.expires_at && new Date(album.expires_at) <= new Date()) return loadAlbums();
+
   document.querySelector('#dialog-title').textContent = album.title;
   document.querySelector('#dialog-date').textContent = formatDate(album.event_date);
   document.querySelector('#dialog-description').textContent = album.description || '';
