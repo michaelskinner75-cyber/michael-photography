@@ -21,20 +21,37 @@ function setLoggedIn(loggedIn) {
 }
 
 if (!configured) {
-  showMessage(document.querySelector('#login-message'), 'Add your Supabase URL and anonymous key to config.js first.', true);
-  document.querySelector('#login-form button').disabled = true;
+  showMessage(document.querySelector('#login-message'), 'Add your Supabase URL and publishable key to config.js first.', true);
+  document.querySelectorAll('#login-panel button').forEach(button => button.disabled = true);
 } else {
   client.auth.getSession().then(({ data }) => setLoggedIn(Boolean(data.session)));
   client.auth.onAuthStateChange((_event, session) => setLoggedIn(Boolean(session)));
 }
 
+document.querySelector('#magic-link-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  const message = document.querySelector('#login-message');
+  const email = document.querySelector('#magic-email').value.trim();
+  showMessage(message, 'Sending your secure sign-in link…');
+  const redirectTo = new URL('admin.html', window.location.href).href;
+  const { error } = await client.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: redirectTo }
+  });
+  showMessage(message, error ? error.message : 'Email sent. Open the newest link on this device; it will return you to the Album Manager.', Boolean(error));
+});
+
 document.querySelector('#login-form').addEventListener('submit', async event => {
   event.preventDefault();
   const message = document.querySelector('#login-message');
+  const email = document.querySelector('#email').value.trim();
+  const password = document.querySelector('#password').value;
+  if (!email || !password) return showMessage(message, 'Enter both email and password.', true);
   showMessage(message, 'Signing in…');
-  const { error } = await client.auth.signInWithPassword({ email: document.querySelector('#email').value, password: document.querySelector('#password').value });
+  const { error } = await client.auth.signInWithPassword({ email, password });
   showMessage(message, error ? error.message : '', Boolean(error));
 });
+
 document.querySelector('#logout-button').addEventListener('click', () => client.auth.signOut());
 
 document.querySelector('#album-form').addEventListener('submit', async event => {
@@ -45,6 +62,7 @@ document.querySelector('#album-form').addEventListener('submit', async event => 
     slug: `${slugify(title)}-${Date.now().toString().slice(-6)}`,
     description: document.querySelector('#album-description').value.trim(),
     event_date: document.querySelector('#album-date').value || null,
+    expires_at: document.querySelector('#album-expiry').value || null,
     is_public: document.querySelector('#album-public').checked
   });
   if (error) return alert(error.message);
@@ -54,7 +72,7 @@ document.querySelector('#album-form').addEventListener('submit', async event => 
 });
 
 async function refreshAlbums() {
-  const { data, error } = await client.from('albums').select('id,title,event_date,is_public,cover_url,created_at,photos(count)').order('created_at', { ascending: false });
+  const { data, error } = await client.from('albums').select('id,title,event_date,expires_at,is_public,cover_url,created_at,photos(count)').order('created_at', { ascending: false });
   if (error) return console.error(error);
   albums = data || [];
   const select = document.querySelector('#album-select');
@@ -63,7 +81,7 @@ async function refreshAlbums() {
   list.innerHTML = albums.map(album => `
     <article class="admin-album-row">
       <div class="admin-thumb" style="background-image:url('${album.cover_url || ''}')"></div>
-      <div><strong>${album.title}</strong><small>${album.event_date || 'No date'} · ${album.photos?.[0]?.count || 0} photos · ${album.is_public ? 'Public' : 'Private'}</small></div>
+      <div><strong>${album.title}</strong><small>${album.event_date || 'No date'} · ${album.photos?.[0]?.count || 0} photos · ${album.is_public ? 'Public' : 'Private'}${album.expires_at ? ` · expires ${album.expires_at}` : ''}</small></div>
       <button class="danger-text" data-delete="${album.id}">Delete</button>
     </article>`).join('') || '<p>No albums yet.</p>';
   list.querySelectorAll('[data-delete]').forEach(button => button.addEventListener('click', () => deleteAlbum(button.dataset.delete)));
