@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Michael Skinner Photography — weddings, portraits, family and events across Scotland." />
+  <title>Michael Skinner Photography</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#home">MS <span>Photography</span></a>
+    <button class="nav-toggle" aria-label="Open navigation">☰</button>
+    <nav>
+      <a href="#albums">Albums</a>
+      <a href="#about">About</a>
+      <a href="#contact">Contact</a>
+      <a class="admin-link" href="admin.html">Album Manager</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="eyebrow">Fife · Scotland</p>
+        <h1>Real moments,<br>beautifully remembered.</h1>
+        <p>Wedding, portrait, family and event photography by Michael Skinner.</p>
+        <a class="button" href="#albums">View albums</a>
+      </div>
+    </section>
+
+    <section id="albums" class="section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Portfolio</p>
+          <h2>Latest albums</h2>
+        </div>
+        <p>Open an album to view the full collection.</p>
+      </div>
+      <div id="album-grid" class="album-grid">
+        <div class="loading">Loading albums…</div>
+      </div>
+    </section>
+
+    <section id="about" class="about section">
+      <div class="about-card">
+        <p class="eyebrow">Behind the camera</p>
+        <h2>Hi, I’m Michael.</h2>
+        <p>I’m a Scotland-based photographer focused on natural expressions, honest moments and polished images that still feel like you.</p>
+        <p>My current kit includes a Nikon D7500 with a professional 24–70mm f/2.8 lens.</p>
+      </div>
+      <div class="about-image" role="img" aria-label="Photographer at work"></div>
+    </section>
+
+    <section id="contact" class="contact section">
+      <p class="eyebrow">Bookings</p>
+      <h2>Let’s capture something special.</h2>
+      <p>Add your email, Facebook or Instagram details here.</p>
+      <a class="button button-dark" href="mailto:your-email@example.com">Get in touch</a>
+    </section>
+  </main>
+
+  <footer>
+    <span>© <span id="year"></span> Michael Skinner Photography</span>
+    <span>Fife, Scotland</span>
+  </footer>
+
+  <dialog id="album-dialog">
+    <button class="dialog-close" aria-label="Close album">×</button>
+    <div class="dialog-header">
+      <p id="dialog-date" class="eyebrow"></p>
+      <h2 id="dialog-title"></h2>
+      <p id="dialog-description"></p>
+    </div>
+    <div id="photo-grid" class="photo-grid"></div>
+  </dialog>
+
+  <dialog id="lightbox">
+    <button class="dialog-close" aria-label="Close photo">×</button>
+    <img id="lightbox-image" alt="Selected photograph" />
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
