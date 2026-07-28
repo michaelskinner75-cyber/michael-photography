@@ -17,7 +17,7 @@ document.querySelector('#cancel-request')?.addEventListener('click',()=>requestD
 
 function escapeHtml(v=''){return v.replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 function formatDate(v){return v?new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric'}).format(new Date(`${v}T12:00:00`)):''}
-function logoMarkup(){return `<svg viewBox="0 0 240 150" aria-hidden="true"><g fill="none" stroke="white" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><path d="M88 42h22l10-22h50l10 22h18c15 0 27 12 27 27v44c0 15-12 27-27 27h-18"/><circle cx="158" cy="91" r="32"/></g><text x="4" y="116" fill="white" font-family="Georgia,serif" font-size="100" font-weight="700">MS</text></svg>`}
+function logoMarkup(){return `<svg viewBox="0 0 300 190" aria-hidden="true"><path d="M102 47h38l14-27h65l14 27h28c17 0 31 14 31 31v60c0 17-14 31-31 31H91c-17 0-31-14-31-31V78c0-17 14-31 31-31z" fill="none" stroke="white" stroke-width="10" stroke-linejoin="round"/><circle cx="214" cy="108" r="40" fill="none" stroke="white" stroke-width="10"/><text x="8" y="142" fill="white" font-family="Georgia,serif" font-size="112" font-weight="700">MS</text></svg>`}
 function watermarkMarkup(type){return `<span class="photo-watermark ${type==='logo'?'logo':'proof'}">${type==='logo'?logoMarkup():''}</span>`}
 
 async function loadAlbums(){
