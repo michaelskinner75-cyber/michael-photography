@@ -58,6 +58,13 @@ loadingStyles.textContent = `
 .gallery-progress-count{margin:0;color:#aaa49a;font-size:12px;letter-spacing:.08em}
 .photo-tile{opacity:0;transform:translateY(12px);transition:opacity .45s ease,transform .45s ease}
 .photo-tile.loaded{opacity:1;transform:none}
+.album-viewing-notice{column-span:all;max-width:760px;margin:28px auto 60px;padding:clamp(28px,5vw,58px);border:1px solid #d0a54f66;background:linear-gradient(145deg,#15130f,#090909);text-align:center;box-shadow:0 24px 70px #0008}
+.album-viewing-notice .notice-icon{display:grid;place-items:center;width:54px;height:54px;margin:0 auto 20px;border:1px solid var(--gold,#d0a54f);border-radius:50%;color:var(--gold,#d0a54f);font-size:24px}
+.album-viewing-notice h3{margin:0 0 18px;font-family:'Cormorant Garamond',serif;font-size:clamp(36px,6vw,56px);font-weight:500}
+.album-viewing-notice p{max-width:620px;margin:0 auto 14px;color:#d5d1ca;line-height:1.8}
+.album-viewing-notice strong{color:#fff}
+.album-viewing-notice button{margin-top:18px;border:1px solid var(--gold,#d0a54f);background:var(--gold,#d0a54f);color:#080808;padding:15px 28px;font:600 11px Montserrat,sans-serif;letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+.album-viewing-notice button:hover{filter:brightness(1.08)}
 @keyframes gallerySpin{to{transform:rotate(360deg)}}`;
 document.head.appendChild(loadingStyles);
 
@@ -202,6 +209,53 @@ document.querySelector('#request-form')?.addEventListener('submit', event => {
   requestDialog?.close();
 });
 
+function renderAlbumPhotos(grid, photos, album) {
+  grid.innerHTML = `
+    <div id="photo-loading-progress" class="gallery-progress">
+      <div class="gallery-spinner" aria-hidden="true"></div>
+      <div class="gallery-progress-heading"><span>Loading photographs</span><strong class="gallery-progress-percentage">0%</strong></div>
+      <div class="gallery-progress-track"><div class="gallery-progress-bar"></div></div>
+      <p class="gallery-progress-count">0 of ${photos.length} photos loaded</p>
+    </div>
+    ${photos.map(photo => `
+      <button class="photo-tile" data-full="${photo.image_url}" data-title="${escapeHtml(photo.caption || album.title)}">
+        <img loading="lazy" src="${photo.thumbnail_url || photo.image_url}" alt="${escapeHtml(photo.caption || album.title)}">
+        ${selectedAlbumWatermarked ? watermarkMarkup(selectedWatermarkType) : ''}
+      </button>`).join('')}`;
+
+  const images = [...grid.querySelectorAll('img')];
+  let loaded = 0;
+  const done = image => {
+    image.closest('.photo-tile')?.classList.add('loaded');
+    updatePhotoProgress(++loaded, images.length);
+  };
+  if (!images.length) updatePhotoProgress(0, 0);
+  images.forEach(image => {
+    if (image.complete) done(image);
+    else {
+      image.addEventListener('load', () => done(image), { once: true });
+      image.addEventListener('error', () => done(image), { once: true });
+    }
+  });
+
+  grid.querySelectorAll('.photo-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      selectedPhotoUrl = tile.dataset.full;
+      selectedPhotoTitle = tile.dataset.title || album.title;
+      document.querySelector('#lightbox-image').src = selectedPhotoUrl;
+      const watermark = document.querySelector('#lightbox-watermark');
+      watermark.className = selectedAlbumWatermarked
+        ? `photo-watermark ${selectedWatermarkType === 'logo' ? 'logo' : 'proof'}`
+        : '';
+      watermark.innerHTML = selectedAlbumWatermarked && selectedWatermarkType === 'logo' ? logoMarkup() : '';
+      const download = document.querySelector('#download-photo');
+      download.disabled = selectedAlbumWatermarked;
+      download.textContent = selectedAlbumWatermarked ? 'Download unavailable on proof' : 'Download photo';
+      lightbox?.showModal();
+    });
+  });
+}
+
 async function openAlbum(id) {
   if (!client) return;
   try {
@@ -225,50 +279,19 @@ async function openAlbum(id) {
 
     const grid = document.querySelector('#photo-grid');
     grid.innerHTML = `
-      <div id="photo-loading-progress" class="gallery-progress">
-        <div class="gallery-spinner" aria-hidden="true"></div>
-        <div class="gallery-progress-heading"><span>Loading photographs</span><strong class="gallery-progress-percentage">0%</strong></div>
-        <div class="gallery-progress-track"><div class="gallery-progress-bar"></div></div>
-        <p class="gallery-progress-count">0 of ${photos.length} photos loaded</p>
-      </div>
-      ${photos.map(photo => `
-        <button class="photo-tile" data-full="${photo.image_url}" data-title="${escapeHtml(photo.caption || album.title)}">
-          <img loading="lazy" src="${photo.thumbnail_url || photo.image_url}" alt="${escapeHtml(photo.caption || album.title)}">
-          ${selectedAlbumWatermarked ? watermarkMarkup(selectedWatermarkType) : ''}
-        </button>`).join('')}`;
+      <section class="album-viewing-notice" aria-labelledby="album-notice-title">
+        <div class="notice-icon" aria-hidden="true">i</div>
+        <p class="kicker">Before viewing this album</p>
+        <h3 id="album-notice-title">Image quality notice</h3>
+        <p>The photographs in this album are displayed in a <strong>lower, web-optimised resolution</strong> for faster loading.</p>
+        <p><strong>Full-resolution photographs are available on request.</strong> The original files are kept securely offline and are not stored on this website.</p>
+        <button id="view-album-photos" type="button">View album</button>
+      </section>`;
 
     albumDialog?.showModal();
-    const images = [...grid.querySelectorAll('img')];
-    let loaded = 0;
-    const done = image => {
-      image.closest('.photo-tile')?.classList.add('loaded');
-      updatePhotoProgress(++loaded, images.length);
-    };
-    if (!images.length) updatePhotoProgress(0, 0);
-    images.forEach(image => {
-      if (image.complete) done(image);
-      else {
-        image.addEventListener('load', () => done(image), { once: true });
-        image.addEventListener('error', () => done(image), { once: true });
-      }
-    });
-
-    grid.querySelectorAll('.photo-tile').forEach(tile => {
-      tile.addEventListener('click', () => {
-        selectedPhotoUrl = tile.dataset.full;
-        selectedPhotoTitle = tile.dataset.title || album.title;
-        document.querySelector('#lightbox-image').src = selectedPhotoUrl;
-        const watermark = document.querySelector('#lightbox-watermark');
-        watermark.className = selectedAlbumWatermarked
-          ? `photo-watermark ${selectedWatermarkType === 'logo' ? 'logo' : 'proof'}`
-          : '';
-        watermark.innerHTML = selectedAlbumWatermarked && selectedWatermarkType === 'logo' ? logoMarkup() : '';
-        const download = document.querySelector('#download-photo');
-        download.disabled = selectedAlbumWatermarked;
-        download.textContent = selectedAlbumWatermarked ? 'Download unavailable on proof' : 'Download photo';
-        lightbox?.showModal();
-      });
-    });
+    document.querySelector('#view-album-photos')?.addEventListener('click', () => {
+      renderAlbumPhotos(grid, photos, album);
+    }, { once: true });
   } catch (error) {
     console.error('Album opening failed:', error);
   }
