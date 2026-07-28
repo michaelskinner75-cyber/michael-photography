@@ -36,8 +36,7 @@ function isCarAlbum(album){return /(car|cars|automotive|porsche|bmw|vehicle|moto
 
 async function loadAlbums(){
   if(!configured){albumGrid.innerHTML='<p>Supabase is not configured.</p>';return}
-  const now=new Date().toISOString();
-  const{data,error}=await client.from('albums').select('id,title,description,event_date,expires_at,cover_url,created_at,view_count,photos(count)').eq('is_public',true).or(`expires_at.is.null,expires_at.gt.${now}`).order('created_at',{ascending:false});
+  const{data,error}=await client.from('albums').select('id,title,description,event_date,expires_at,cover_url,created_at,view_count,photos(count)').eq('is_public',true).order('created_at',{ascending:false});
   if(error){albumGrid.innerHTML='<p>Albums could not be loaded.</p>';return}
   const publicAlbums=data||[];
   if(!publicAlbums.length){albumGrid.innerHTML='<p>No public albums have been added yet.</p>';return}
